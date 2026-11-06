@@ -3,3 +3,4 @@ playwright-report/
 test-results/
 .env
 tests/artifacts/
+__pycache__/

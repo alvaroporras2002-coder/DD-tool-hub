@@ -12,7 +12,8 @@
     "test:browser:hub": "node tests/hub-browser.cjs",
     "test:browser:notes": "node tests/notes-smoke.cjs",
     "test:browser:timeline": "node tests/video-browser.cjs",
-    "test:browser:export": "node tests/video-export-browser.cjs"
+    "test:browser:export": "node tests/video-export-browser.cjs",
+    "test:video:file": "python3 tests/verify-export.py"
   },
   "devDependencies": {
     "basichtml": "2.4.9",

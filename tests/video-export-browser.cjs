@@ -7,6 +7,25 @@ const server=http.createServer((req,res)=>{const file=path.join(root,decodeURI(r
  browser=await chromium.launch({headless:true,args:['--autoplay-policy=no-user-gesture-required'],...(process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE}:{})});
  const p=await browser.newPage({viewport:{width:1440,height:1000}}),errors=[];p.on('pageerror',error=>errors.push(error.message));
  await p.goto('http://localhost:8135/tools/video.html');await p.locator('[data-action=new]').first().click();await p.locator('[data-tab=text]').click();await p.locator('[data-text-style=title]').click();
+ // loadeddata alone can precede actual frame presentation in headless Chromium.
+ // Read a deliberately presented sample; FFmpeg separately checks frame zero.
+ await p.evaluate(()=>{window.__ddhubPresentSample=async(video,target=.1)=>{
+  video.playsInline=true;video.muted=true;video.style.cssText='position:fixed;left:0;top:0;width:2px;height:2px;opacity:.01;pointer-events:none;z-index:2147483647';document.body.appendChild(video);
+  const time=Number.isFinite(video.duration)?Math.min(target,Math.max(0,video.duration-.04)):target;
+  if(Math.abs(video.currentTime-time)>.001||video.seeking)await new Promise((resolve,reject)=>{
+   const timer=setTimeout(()=>{cleanup();reject(new Error('Sample seek timed out: '+JSON.stringify({time,actual:video.currentTime,readyState:video.readyState})));},6000);
+   const cleanup=()=>{clearTimeout(timer);video.removeEventListener('seeked',done);video.removeEventListener('error',failed);};const done=()=>{cleanup();resolve();},failed=()=>{cleanup();reject(new Error('Sample seek failed'));};
+   video.addEventListener('seeked',done,{once:true});video.addEventListener('error',failed,{once:true});video.currentTime=time;
+  });
+  let frameHandle,timer,metadata;
+  const presented=video.requestVideoFrameCallback?new Promise((resolve,reject)=>{
+   timer=setTimeout(()=>{if(frameHandle!==undefined)video.cancelVideoFrameCallback(frameHandle);reject(new Error('Sample presentation timed out: '+JSON.stringify({time:video.currentTime,readyState:video.readyState,width:video.videoWidth,height:video.videoHeight})));},6000);
+   frameHandle=video.requestVideoFrameCallback((_,frame)=>{clearTimeout(timer);metadata=frame;resolve();});
+  }):Promise.resolve();
+  try{await video.play();await presented;video.pause();await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));return {sampleTime:video.currentTime,presentedMediaTime:metadata?.mediaTime??null};}
+  finally{clearTimeout(timer);if(frameHandle!==undefined)video.cancelVideoFrameCallback(frameHandle);video.pause();}
+ };});
+
  // A genuine browser codec smoke test: render a short native-size composition,
  // decode its downloaded container, inspect dimensions and exercise cancellation.
  // This block requires a real installed browser; Node API mocks do not replace it.
@@ -20,13 +39,14 @@ const server=http.createServer((req,res)=>{const file=path.join(root,decodeURI(r
   const url=URL.createObjectURL(result.blob);video.src=url;
   try{
    await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Exported container failed to decode')),10000);video.onloadeddata=()=>{clearTimeout(timer);resolve();};video.onerror=()=>{clearTimeout(timer);reject(new Error('Exported container decode error'));};video.load();});
-   const metadata={width:video.videoWidth,height:video.videoHeight,duration:Number.isFinite(video.duration)?video.duration:null,mime:result.mimeType,bytes:result.blob.size};
+   const presentation=await window.__ddhubPresentSample(video);
+   const metadata={...presentation,width:video.videoWidth,height:video.videoHeight,duration:Number.isFinite(video.duration)?video.duration:null,mime:result.mimeType,bytes:result.blob.size};
    await video.play();await new Promise(resolve=>setTimeout(resolve,180));video.pause();metadata.decodedTime=video.currentTime;
    const controller=new AbortController();text.duration=2;app.refresh();const timer=setTimeout(()=>controller.abort(),80);
    try{await Engine.exportVideo({width:640,height:360,fps:24,mimeType:formats[0],signal:controller.signal});throw new Error('Cancellation unexpectedly returned a file');}catch(error){if(error.name!=='AbortError')throw error;}finally{clearTimeout(timer);}
    metadata.restoredWidth=app.canvas.width;metadata.restoredHeight=app.canvas.height;metadata.playing=app.playing;
    return metadata;
-  }finally{video.removeAttribute('src');video.load();URL.revokeObjectURL(url);}
+  }finally{video.removeAttribute('src');video.load();video.remove();URL.revokeObjectURL(url);}
  });
  assert.equal(encoded.width,640);assert.equal(encoded.height,360);assert(encoded.bytes>16);assert(encoded.decodedTime>0,'browser decodes and advances exported video');
  if(encoded.mime.includes('mp4'))assert(encoded.duration>0&&Number.isFinite(encoded.duration),'MP4 has finite duration metadata');
@@ -41,19 +61,20 @@ const server=http.createServer((req,res)=>{const file=path.join(root,decodeURI(r
   let stats;
   try{
    await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Independent source fixture failed to decode')),10000);video.onloadeddata=()=>{clearTimeout(timer);resolve();};video.onerror=()=>{clearTimeout(timer);reject(new Error('Independent source decode error'));};video.load();});
+   const presentation=await window.__ddhubPresentSample(video);
    const sample=document.createElement('canvas');sample.width=video.videoWidth;sample.height=video.videoHeight;sample.getContext('2d').drawImage(video,0,0);
    const pixels=sample.getContext('2d').getImageData(0,0,sample.width,sample.height).data;let luma=0;for(let i=0;i<pixels.length;i+=4)luma+=pixels[i];luma/=pixels.length/4;
    let error=0,count=0,blackSum=0,whiteSum=0,blackCount=0,whiteCount=0;
    for(let y=256;y<512;y++)for(let x=256;x<1024;x++){const i=(y*sample.width+x)*4,value=pixels[i]*.2126+pixels[i+1]*.7152+pixels[i+2]*.0722,expected=x%8<4?0:255;error+=Math.abs(value-expected);count++;if(expected===0){blackSum+=value;blackCount++;}else{whiteSum+=value;whiteCount++;}}
-   stats={width:video.videoWidth,height:video.videoHeight,duration:Number.isFinite(video.duration)?video.duration:null,mime:blob.type,firstFrameMeanLuma:luma,stripeMeanAbsoluteError:error/count,stripeContrast:whiteSum/whiteCount-blackSum/blackCount,firstPixels:Array.from(pixels.slice((256*sample.width+256)*4,(256*sample.width+272)*4))};
-  }finally{video.removeAttribute('src');video.load();URL.revokeObjectURL(url);}
+   stats={...presentation,width:video.videoWidth,height:video.videoHeight,duration:Number.isFinite(video.duration)?video.duration:null,mime:blob.type,decodedSampleMeanLuma:luma,stripeMeanAbsoluteError:error/count,stripeContrast:whiteSum/whiteCount-blackSum/blackCount,decodedSamplePixels:Array.from(pixels.slice((256*sample.width+256)*4,(256*sample.width+272)*4))};
+  }finally{video.removeAttribute('src');video.load();video.remove();URL.revokeObjectURL(url);}
   window.__ddhubInputFixture={file:new File([blob],'source-detail.'+extension,{type:blob.type}),stats};
   return {stats,bytes:Array.from(new Uint8Array(await blob.arrayBuffer())),extension};
  },fixtureBytes);
  fs.writeFileSync(path.join(artifacts,'video-source-fixture.'+inputFixture.extension),Buffer.from(inputFixture.bytes));
  fs.writeFileSync(path.join(artifacts,'video-source-metadata.json'),JSON.stringify(inputFixture.stats,null,2));
  const sourceStats=inputFixture.stats;
- assert(sourceStats.firstFrameMeanLuma>40,'independent source first frame: '+JSON.stringify(sourceStats));
+ assert(sourceStats.decodedSampleMeanLuma>40,'independent presented source sample: '+JSON.stringify(sourceStats));
  assert(sourceStats.stripeMeanAbsoluteError<35,'independent source stripe detail: '+JSON.stringify(sourceStats));
  assert(sourceStats.stripeContrast>170,'independent source stripe contrast: '+JSON.stringify(sourceStats));
  const mediaExport=await p.evaluate(async()=>{
@@ -67,6 +88,7 @@ const server=http.createServer((req,res)=>{const file=path.join(root,decodeURI(r
   let decoder;
   try{
    await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Media export did not decode')),10000);video.onloadeddata=()=>{clearTimeout(timer);resolve();};video.onerror=()=>{clearTimeout(timer);reject(new Error('Media export decode error'));};video.load();});
+   const presentation=await window.__ddhubPresentSample(video);
    const sample=document.createElement('canvas');sample.width=video.videoWidth;sample.height=video.videoHeight;sample.getContext('2d').drawImage(video,0,0);
    const pixels=sample.getContext('2d').getImageData(0,0,sample.width,sample.height).data;let luma=0;for(let i=0;i<pixels.length;i+=4)luma+=pixels[i];luma/=pixels.length/4;
    // Four-pixel monochrome bars are unchanged in this region by the caption
@@ -81,15 +103,15 @@ const server=http.createServer((req,res)=>{const file=path.join(root,decodeURI(r
    let decodedFrames=0,frameHandle;const count=()=>{decodedFrames++;frameHandle=video.requestVideoFrameCallback(count);};if(video.requestVideoFrameCallback)frameHandle=video.requestVideoFrameCallback(count);
    await video.play();await new Promise(resolve=>setTimeout(resolve,600));video.pause();if(frameHandle!==undefined)video.cancelVideoFrameCallback(frameHandle);
    decoder=new AudioContext();const audioData=await decoder.decodeAudioData(await result.blob.arrayBuffer()),samples=audioData.getChannelData(0);let power=0;for(const sample of samples)power+=sample*sample;const rms=Math.sqrt(power/samples.length);
-   return {metadata:{width:video.videoWidth,height:video.videoHeight,duration:Number.isFinite(video.duration)?video.duration:null,mime:result.mimeType,sourceWidth:media.width,sourceHeight:media.height,projectWidth:app.project.width,projectHeight:app.project.height,firstFrameMeanLuma:luma,stripeMeanAbsoluteError,stripeContrast,sourceFirstFrameMeanLuma:sourceStats.firstFrameMeanLuma,sourceStripeMeanAbsoluteError:sourceStats.stripeMeanAbsoluteError,sourceStripeContrast:sourceStats.stripeContrast,firstPixels:Array.from(pixels.slice((256*sample.width+256)*4,(256*sample.width+272)*4)),decodedFrames,audioChannels:audioData.numberOfChannels,audioDuration:audioData.duration,audioRms:rms,framesDrawn:result.framesDrawn,droppedFrames:result.droppedFrames},bytes:Array.from(new Uint8Array(await result.blob.arrayBuffer())),extension:result.extension};
-  }finally{video.removeAttribute('src');video.load();URL.revokeObjectURL(url);if(decoder)await decoder.close();}
+   return {metadata:{...presentation,width:video.videoWidth,height:video.videoHeight,duration:Number.isFinite(video.duration)?video.duration:null,mime:result.mimeType,sourceWidth:media.width,sourceHeight:media.height,projectWidth:app.project.width,projectHeight:app.project.height,decodedSampleMeanLuma:luma,stripeMeanAbsoluteError,stripeContrast,sourceDecodedSampleMeanLuma:sourceStats.decodedSampleMeanLuma,sourceStripeMeanAbsoluteError:sourceStats.stripeMeanAbsoluteError,sourceStripeContrast:sourceStats.stripeContrast,decodedSamplePixels:Array.from(pixels.slice((256*sample.width+256)*4,(256*sample.width+272)*4)),decodedFrames,audioChannels:audioData.numberOfChannels,audioDuration:audioData.duration,audioRms:rms,framesDrawn:result.framesDrawn,droppedFrames:result.droppedFrames},bytes:Array.from(new Uint8Array(await result.blob.arrayBuffer())),extension:result.extension};
+  }finally{video.removeAttribute('src');video.load();video.remove();URL.revokeObjectURL(url);if(decoder)await decoder.close();}
  });
  const mediaStats=mediaExport.metadata;
  fs.writeFileSync(path.join(artifacts,'video-export-sample.'+mediaExport.extension),Buffer.from(mediaExport.bytes));
  fs.writeFileSync(path.join(artifacts,'video-export-metadata.json'),JSON.stringify(mediaStats,null,2));
  assert(mediaStats.stripeMeanAbsoluteError<35,'decoded stripe detail: '+JSON.stringify(mediaStats));
  assert(mediaStats.stripeContrast>170,'decoded stripe contrast: '+JSON.stringify(mediaStats));
- assert.equal(mediaStats.width,1280,'auto export retains native source width above old project width');assert.equal(mediaStats.height,720);assert.equal(mediaStats.projectWidth,640,'saved composition is not migrated');assert(mediaStats.firstFrameMeanLuma>40,'first decoded frame contains source image');assert(mediaStats.audioChannels>=1);assert(mediaStats.audioRms>.01,'mixed audio tone is present');assert(mediaStats.audioDuration>.5);if(mediaStats.decodedFrames)assert(mediaStats.decodedFrames>=8,'export contains a stream of decoded frames');
+ assert.equal(mediaStats.width,1280,'auto export retains native source width above old project width');assert.equal(mediaStats.height,720);assert.equal(mediaStats.projectWidth,640,'saved composition is not migrated');assert(mediaStats.decodedSampleMeanLuma>40,'presented decoded sample contains source image');assert(mediaStats.audioChannels>=1);assert(mediaStats.audioRms>.01,'mixed audio tone is present');assert(mediaStats.audioDuration>.5);if(mediaStats.decodedFrames)assert(mediaStats.decodedFrames>=8,'export contains a stream of decoded frames');
  await p.screenshot({path:path.join(artifacts,'video-editor-export.png')});assert.deepEqual(errors,[]);console.log(JSON.stringify({actualBrowserMediaAndAudioPassed:true,...mediaStats,scope:'independent FFmpeg input/decode/import/composition/browser output encode/video decode/audio decode; precise A/V synchronization not measured'}));
 
  }finally{if(browser)await browser.close();server.close();}})().catch(error=>{console.error(error);server.close();process.exit(1)});
