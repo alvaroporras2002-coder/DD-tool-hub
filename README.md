@@ -53,7 +53,6 @@ Las pruebas de lógica principales no necesitan instalar paquetes. La verificaci
 
 ```sh
 npm test
-npm run test:render
 npm run test:export
 ```
 
@@ -61,9 +60,10 @@ Comprueban el cálculo y persistencia del DTT, reglas de notas y seguimientos, I
 
 ```sh
 npm install
+npm run test:render
 npm run test:dom
 npx playwright install chromium
 npm run test:browser
 ```
 
-Se puede indicar un Chromium disponible con `CHROMIUM_EXECUTABLE`. Durante la implementación pasaron las pruebas de lógica y DOM; las pruebas de navegador quedaron preparadas pero no pudieron ejecutarse porque el entorno no tenía Chromium y bloqueó su descarga. La previsualización/exportación multimedia depende de los códecs soportados por el navegador.
+Se puede indicar un Chromium disponible con `CHROMIUM_EXECUTABLE`. El flujo `Hub and video quality` de GitHub Actions instala Chromium y ejecuta las pruebas de navegador, incluida una exportación real de video con audio y su decodificación. Guarda capturas de escritorio/móvil, un archivo exportado y metadatos en el artefacto `hub-video-verification`. Las pruebas locales de MediaRecorder usan dobles de las API; las verificaciones con Chromium se ejecutan por separado. La compatibilidad de formatos depende de los códecs del navegador.

@@ -19,13 +19,17 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Logic and export lifecycle
-        run: |
-          npm test
-          npm run test:export
-          npm run test:render
-          npm run test:dom
+        id: logic
+        run: node tests/ci-runner.cjs test test:export test:render test:dom
+      - name: 'Logic result: ${{ steps.logic.outputs.detail }}'
+        if: always()
+        run: echo 'Logic checks finished.'
       - name: Browser and real video export
-        run: npm run test:browser
+        id: browser
+        run: node tests/ci-runner.cjs test:browser
+      - name: 'Browser result: ${{ steps.browser.outputs.detail }}'
+        if: always()
+        run: echo 'Browser checks finished.'
       - name: Save screenshots and export samples
         if: always()
         uses: actions/upload-artifact@v4

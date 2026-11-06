@@ -1,5 +1,6 @@
 const fs=require('fs'),vm=require('vm'),assert=require('assert');
-require(process.env.TEST_DOM_LIBRARY || 'basichtml');
+const loadedDOM = require(process.env.TEST_DOM_LIBRARY || 'basichtml');
+const basicHTML = loadedDOM.init ? loadedDOM : globalThis.basicHTML;
 const w=basicHTML.init({window:{}}),D=w.document,storage={},downloads=[];
 const proto=basicHTML.HTMLElement.prototype;
 function matches(node,sel){const attr=[...sel.matchAll(/\[([^=\]]+)(?:=["']?([^"'\]]*)["']?)?\]/g)];const base=sel.replace(/\[[^\]]*\]/g,'');return node.nodeType===1&&(!base||base==='*'||(base[0]==='#'?node.id===base.slice(1):base[0]==='.'?node.classList.contains(base.slice(1)):node.nodeName.toLowerCase()===base.toLowerCase()))&&attr.every(m=>node.hasAttribute(m[1])&&(m[2]===undefined||node.getAttribute(m[1])===m[2]));}
