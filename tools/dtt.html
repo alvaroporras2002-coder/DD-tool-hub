@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DTT Tracker</title>
+  <style>
+:root{color-scheme:light;--bg:#f4f7fb;--panel:rgba(255,255,255,.82);--panel-2:#fff;--border:#dfe7ee;--text:#172c3a;--muted:#687d8c;--accent:#267b9e;--accent-2:#75c3c7;--danger:#ad394b;--shadow:0 8px 28px #243b5310;--radius:22px;font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}*{box-sizing:border-box}body{margin:0;background:transparent;color:var(--text);font-size:14px}button,input{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:default}button:focus-visible,input:focus-visible,[role=button]:focus-visible{outline:3px solid #5aa6c5;outline-offset:4px}.wrap{max-width:1380px;margin:auto;padding:8px 3px 24px}.hero{display:grid;grid-template-columns:1fr 1.3fr;gap:18px;margin-bottom:18px}.card,.panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);backdrop-filter:blur(16px)}.title-card{padding:26px}.phone{width:42px;height:42px;background:#e8f3f9;color:var(--accent);display:grid;place-items:center;border-radius:13px;font-size:22px;margin-bottom:16px}h1{font-size:29px;letter-spacing:-1px;margin:0 0 12px}h2{font-size:20px}h3{font-size:16px;margin:0 0 18px}.subtitle{color:var(--muted);line-height:1.7;max-width:48ch}.metrics{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:16px;height:100%;align-items:center}.metric{min-width:0}.label,.small,.k{font-size:12px;color:var(--muted);line-height:1.6}.value{font-size:clamp(20px,2.5vw,32px);font-weight:700;letter-spacing:-1px;overflow-wrap:anywhere;margin:8px 0;font-variant-numeric:tabular-nums}.small{overflow-wrap:anywhere}.grid{display:grid;grid-template-columns:1.05fr 1fr;gap:18px;align-items:start}.left-stack,.side{display:grid;gap:18px;min-width:0}.upload-controls{padding:18px;display:flex;justify-content:space-between;align-items:end;gap:15px;flex-wrap:wrap}.btn{display:inline-flex;align-items:center;justify-content:center;min-height:41px;padding:10px 16px;border:1px solid transparent;border-radius:11px;color:#fff;background:var(--accent);font-weight:600;font-size:13px;text-decoration:none}.btn:hover{filter:brightness(1.06)}.btn.secondary{background:#edf3f7;color:var(--text);border-color:var(--border)}.goal-box{display:flex;flex-direction:column;gap:7px;color:var(--muted);font-size:12px}.goal-box input{width:100px}.control{min-height:41px;padding:9px 12px;border:1px solid var(--border);border-radius:10px;background:#fff;color:var(--text);width:100%}.dropzone{padding:40px 24px;min-height:245px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;border-style:dashed;cursor:pointer;transition:background .15s,border-color .15s}.dropzone:hover,.dropzone.dragover{background:#e9f5fb;border-color:var(--accent)}.dropzone .big{font-size:25px;width:54px;height:54px;display:grid;place-items:center;background:#e7f1f8;border-radius:17px;color:var(--accent)}.dropzone h2{margin:18px 0 5px}.dropzone p{line-height:1.7;color:var(--muted);max-width:43ch}.status{display:none;padding:14px 16px;border-radius:12px;background:#e9f6ef;color:#256a48;font-size:13px;line-height:1.6;border:1px solid #cce4d6}.status.error{background:#fff0f1;color:var(--danger);border-color:#f4cfd5}.panel{padding:22px}.row{display:flex;justify-content:space-between;gap:12px;margin:11px 0;color:var(--muted)}.row strong{color:var(--text)}.bar-shell{height:9px;border-radius:20px;background:#e5edf3;overflow:hidden;margin:18px 0 12px}.bar-fill{height:100%;width:0;background:linear-gradient(90deg,#277e9e,#76c6bf);border-radius:20px;transition:width .3s}.note{font-size:12px;color:var(--muted);line-height:1.7;margin-top:12px}.manual-inputs{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.manual-field{font-size:12px;display:flex;flex-direction:column;gap:7px;color:var(--muted)}.manual-actions{display:flex;gap:8px;margin-top:15px;flex-wrap:wrap}.manual-total{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#f2f7fa;padding:14px;border-radius:12px;margin-top:18px;flex-wrap:wrap;font-size:13px}.manual-total small{color:var(--muted)}.manual-list{display:grid;gap:7px;margin-top:14px;max-height:210px;overflow:auto}.manual-empty{font-size:12px;color:var(--muted);padding:9px 0}.manual-item{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border:1px solid var(--border);border-radius:9px;font-size:13px}.delete-btn{background:#fff1f3;border:0;border-radius:7px;padding:6px 10px;color:var(--danger);font-size:12px}.mini{background:#f4f8fa;border-radius:12px;padding:13px}.v{font-size:23px;font-weight:600;margin-top:7px;font-variant-numeric:tabular-nums}.footer{padding:20px 4px 0;color:var(--muted);font-size:12px;line-height:1.7}.day-toolbar{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}.day-toolbar label{display:grid;gap:7px;font-size:12px;color:var(--muted)}.day-actions{display:flex;gap:8px;flex-wrap:wrap}.breakdown{margin-top:17px;padding-top:10px;border-top:1px solid var(--border)}input[type=file]{position:absolute;width:1px;height:1px;opacity:0;overflow:hidden}#storageWarning{margin-bottom:16px}#storageWarning[hidden]{display:none!important}@media(max-width:850px){.hero,.grid{grid-template-columns:1fr}.metrics{min-height:100px}.title-card{padding:22px}.side{grid-template-columns:1fr 1fr}.side>.panel:first-child{grid-column:1/-1}}@media(max-width:540px){.side{grid-template-columns:1fr}.metrics{grid-template-columns:1fr 1fr}.metric:first-child{grid-column:1/-1}.metric:first-child .value{font-size:36px}.value{font-size:22px}.day-toolbar{align-items:stretch}.day-toolbar label{width:100%}.day-actions{width:100%}.day-actions .btn{flex:1}.hero{gap:12px}.panel{padding:18px}.dropzone{padding:28px 15px}.wrap{padding:5px 0 20px}}@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div id="storageWarning" class="status error" role="status" hidden></div>
+    <div class="day-toolbar"><label for="dayInput">Día del reporte<input class="control" type="date" id="dayInput" required></label><div class="day-actions"><button class="btn secondary" type="button" id="exportSummary">Exportar resumen</button><button class="btn secondary" type="button" id="resetDay">Reiniciar día</button></div></div>
+    <section class="hero">
+      <div class="card title-card">
+        <div class="phone" aria-hidden="true">◷</div>
+        <h1>DTT Tracker</h1>
+        <div class="subtitle">
+          Sube tu CSV del día, detecta el tiempo de cada llamada, suma <strong>+1 minuto</strong> solo a llamadas válidas y mira el total al instante.
+        </div>
+      </div>
+
+      <div class="card" style="padding: 22px;">
+        <div class="metrics">
+          <div class="metric">
+            <div class="label">Total DTT</div>
+            <div class="value" id="totalDtt">00:00:00</div>
+            <div class="small" id="totalDttMin">0.00 min</div>
+          </div>
+
+          <div class="metric">
+            <div class="label">Último drop</div>
+            <div class="value" id="lastDrop">—</div>
+            <div class="small" id="fileName">Sin archivo</div>
+          </div>
+
+          <div class="metric">
+            <div class="label">Llamadas válidas</div>
+            <div class="value" id="validCalls">0</div>
+            <div class="small" id="rowsParsed">0 filas leídas</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="left-stack">
+        <div class="card upload-controls">
+          <div>
+            <label class="btn" for="fileInput">Elegir CSV</label>
+            <input id="fileInput" type="file" accept=".csv,text/csv" />
+          </div>
+
+          <label class="goal-box" for="goalInput">
+            <span>Meta diaria</span>
+            <input
+              id="goalInput"
+              class="control"
+              type="number"
+              min="1"
+              step="1"
+              value="70"
+              placeholder="Meta min"
+              title="Meta del día en minutos"
+            />
+          </label>
+        </div>
+
+        <div class="card dropzone" id="dropzone" role="button" tabindex="0" aria-label="Subir archivo CSV de llamadas">
+          <div class="big" aria-hidden="true">↑</div>
+          <h2>Sube tu archivo de llamadas</h2>
+          <p>Arrastra tu archivo CSV a este cuadro. También puedes usar el botón Elegir CSV que está afuera.</p>
+        </div>
+
+        <div class="status" id="successStatus" role="status"></div>
+        <div class="status error" id="errorStatus" role="alert"></div>
+      </div>
+
+      <div class="side">
+        <div class="panel">
+          <h3>Progreso del día</h3>
+          <div class="row"><span>Meta</span><strong id="goalLabel">70 min</strong></div>
+          <div class="row"><span>Avance</span><strong id="progressLabel">0%</strong></div>
+          <div class="bar-shell"><div class="bar-fill" id="progressBar"></div></div>
+          <div class="note">La meta se guarda para el día seleccionado.</div><div class="breakdown"><div class="row"><span>Tiempo de llamadas</span><strong id="baseTime">00:00:00</strong></div><div class="row"><span>Bono · State = Completed</span><strong id="bonusTime">00:00:00</strong></div><div class="row"><span>Tiempo manual</span><strong id="manualBreakdown">00:00:00</strong></div></div>
+        </div>
+
+
+        <div class="panel">
+          <h3>Tiempo manual</h3>
+
+          <div class="manual-inputs">
+            <label class="manual-field" for="manualHours">
+              <span>Hora</span>
+              <input id="manualHours" class="control" type="number" min="0" step="1" placeholder="0" inputmode="numeric" />
+            </label>
+
+            <label class="manual-field" for="manualMinutes">
+              <span>Min</span>
+              <input id="manualMinutes" class="control" type="number" min="0" max="59" step="1" placeholder="0" inputmode="numeric" />
+            </label>
+
+            <label class="manual-field" for="manualSeconds">
+              <span>Seg</span>
+              <input id="manualSeconds" class="control" type="number" min="0" max="59" step="1" placeholder="0" inputmode="numeric" />
+            </label>
+          </div>
+
+          <div class="manual-actions">
+            <button class="btn" id="addManualTime" type="button">A&ntilde;adir</button>
+            <button class="btn secondary" id="clearManualTimes" type="button">Borrar todo</button>
+          </div>
+
+          <div class="manual-total">
+            <span>Total manual</span>
+            <strong id="manualTotal">00:00:00</strong>
+            <small id="manualTotalMin">0.00 min</small>
+          </div>
+
+          <div class="manual-list" id="manualList">
+            <div class="manual-empty">Sin tiempos manuales</div>
+          </div>
+
+          <div class="note">Estos tiempos se suman al Total DTT y al progreso del d&iacute;a.</div>
+        </div>
+
+        <div class="panel">
+          <h3>Resumen rápido</h3>
+          <div class="list">
+            <div class="mini">
+              <div class="k">Tiempo promedio</div>
+              <div class="v" id="avgDuration">00:00:00</div>
+            </div>
+          </div>
+          <div class="note">Se suma Duration in Seconds de todas las filas legibles. El bono de 60 segundos se aplica solo si State es Completed. La carga reemplaza el CSV del día y conserva el tiempo manual.</div>
+        </div>
+      </div>
+    </section>
+
+    <div class="footer">Hecho para uso rápido: arrastra el CSV, mira el total y sigue actualizando el archivo del día.</div>
+  </div>
+
+  <script>
+    const dropzone = document.getElementById('dropzone');
+    const fileInput = document.getElementById('fileInput');
+    const goalInput = document.getElementById('goalInput');
+
+    const totalDtt = document.getElementById('totalDtt');
+    const totalDttMin = document.getElementById('totalDttMin');
+    const lastDrop = document.getElementById('lastDrop');
+    const fileName = document.getElementById('fileName');
+    const validCalls = document.getElementById('validCalls');
+    const rowsParsed = document.getElementById('rowsParsed');
+    const avgDuration = document.getElementById('avgDuration');
+
+    const progressBar = document.getElementById('progressBar');
+    const progressLabel = document.getElementById('progressLabel');
+    const goalLabel = document.getElementById('goalLabel');
+
+    const successStatus = document.getElementById('successStatus');
+    const errorStatus = document.getElementById('errorStatus');
+
+
+    const manualHours = document.getElementById('manualHours');
+    const manualMinutes = document.getElementById('manualMinutes');
+    const manualSeconds = document.getElementById('manualSeconds');
+    const addManualTimeBtn = document.getElementById('addManualTime');
+    const clearManualTimesBtn = document.getElementById('clearManualTimes');
+    const manualTotal = document.getElementById('manualTotal');
+    const manualTotalMin = document.getElementById('manualTotalMin');
+    const manualList = document.getElementById('manualList');
+
+    const STORAGE_KEY = 'ddhub.dtt.v1';
+    const dayInput = document.getElementById('dayInput');
+    const localDay = () => { const d = new Date(); return [d.getFullYear(), String(d.getMonth()+1).padStart(2,'0'), String(d.getDate()).padStart(2,'0')].join('-'); };
+    let activeDay = localDay();
+    dayInput.value = activeDay;
+    const emptyState = () => ({ lastTotalSeconds: 0, csvBaseSeconds: 0, csvBonusSeconds: 0, csvValidCalls: 0, csvValidBaseSeconds: 0, csvTimedCalls: 0, csvRows: 0, lastFileName: '', lastDropTime: '', manualEntries: [] });
+    function storageWarning() {
+      const el = document.getElementById('storageWarning');
+      el.hidden = false; el.style.display = 'block';
+      el.textContent = 'No se pudo guardar en este navegador. Puedes seguir calculando y exportar el resumen para conservarlo.';
+    }
+    let savedDays = {};
+    try {
+      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      if (raw && typeof raw === 'object' && !Array.isArray(raw) && raw.days && typeof raw.days === 'object' && !Array.isArray(raw.days)) savedDays = raw.days;
+    } catch { storageWarning(); }
+    function restoreState(day) {
+      const result = emptyState(), saved = savedDays[day];
+      if (!saved || typeof saved !== 'object') return result;
+      for (const key of ['csvBaseSeconds','csvBonusSeconds','csvValidCalls','csvValidBaseSeconds','csvTimedCalls','csvRows']) if (typeof saved[key] === 'number' && Number.isFinite(saved[key]) && saved[key] >= 0) result[key] = saved[key];
+      for (const key of ['lastFileName','lastDropTime']) if (typeof saved[key] === 'string') result[key] = saved[key];
+      result.manualEntries = Array.isArray(saved.manualEntries) ? saved.manualEntries.filter(e => e && typeof e.id === 'string' && typeof e.seconds === 'number' && Number.isFinite(e.seconds) && e.seconds > 0).map(e => ({id:e.id, seconds:e.seconds})) : [];
+      return result;
+    }
+    const state = restoreState(activeDay);
+    function restoreGoal() { const n = Number(savedDays[activeDay]?.goalMinutes); goalInput.value = Number.isFinite(n) && n >= 1 ? n : 70; }
+    restoreGoal();
+    function persist() {
+      savedDays[activeDay] = { ...state, goalMinutes: Math.max(1, Number(goalInput.value) || 70) };
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify({version:1,days:savedDays})); } catch { storageWarning(); }
+      if (window.parent !== window) window.parent.postMessage({type:'ddhub-dtt-stats',day:activeDay,totalSeconds:getTotalSeconds(),validCalls:state.csvValidCalls,goalMinutes:Math.max(1,Number(goalInput.value)||70)}, location.origin === 'null' ? '*' : location.origin);
+    }
+
+    function formatHMS(totalSeconds) {
+      totalSeconds = Math.max(0, Math.round(totalSeconds));
+      const h = Math.floor(totalSeconds / 3600);
+      const m = Math.floor((totalSeconds % 3600) / 60);
+      const s = totalSeconds % 60;
+      return [h, m, s].map(v => String(v).padStart(2, '0')).join(':');
+    }
+
+    function formatMin(totalSeconds) {
+      return (totalSeconds / 60).toFixed(2) + ' min';
+    }
+
+    function normalizeText(value) {
+      return String(value ?? '')
+        .trim()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function parseCSV(text, delimiter = ',') {
+      const rows = [];
+      let row = [];
+      let cell = '';
+      let inQuotes = false;
+
+      for (let i = 0; i < text.length; i++) {
+        const char = text[i];
+        const next = text[i + 1];
+
+        if (inQuotes) {
+          if (char === '"' && next === '"') {
+            cell += '"';
+            i++;
+          } else if (char === '"') {
+            inQuotes = false;
+          } else {
+            cell += char;
+          }
+        } else {
+          if (char === '"') {
+            inQuotes = true;
+          } else if (char === delimiter) {
+            row.push(cell);
+            cell = '';
+          } else if (char === '\n') {
+            row.push(cell);
+            rows.push(row);
+            row = [];
+            cell = '';
+          } else if (char === '\r') {
+            continue;
+          } else {
+            cell += char;
+          }
+        }
+      }
+
+      if (cell.length || row.length) {
+        row.push(cell);
+        rows.push(row);
+      }
+
+      return rows.filter(r => r.some(v => String(v).trim() !== ''));
+    }
+
+    function detectDelimiter(sample) {
+      const candidates = [',', ';', '\t', '|'];
+      let best = ',';
+      let bestCount = -1;
+
+      for (const delimiter of candidates) {
+        const count = sample.split(delimiter).length - 1;
+        if (count > bestCount) {
+          best = delimiter;
+          bestCount = count;
+        }
+      }
+
+      return best;
+    }
+
+    function hasDurationWrapper(value) {
+      return /^\s*[\(\[]\s*\d{1,3}:\d{1,2}\s*[\)\]]\s*$/.test(String(value ?? ''));
+    }
+
+    function stripDurationWrapper(value) {
+      return String(value ?? '')
+        .trim()
+        .replace(/^['"\s]+|['"\s]+$/g, '')
+        .replace(/^\(\s*/, '')
+        .replace(/\s*\)$/, '')
+        .replace(/^\[\s*/, '')
+        .replace(/\s*\]$/, '')
+        .trim();
+    }
+
+    function headerLooksLikeDuration(header) {
+      const h = normalizeText(header).replace(/[\-_]+/g, ' ');
+
+      return (
+        h.includes('duracion') ||
+        h.includes('duration') ||
+        h.includes('call duration') ||
+        h.includes('talk time') ||
+        h.includes('talktime') ||
+        h.includes('talk') ||
+        h.includes('call length') ||
+        h.includes('length') ||
+        h.includes('seconds') ||
+        h.includes('segundos') ||
+        h.includes('tiempo de llamada') ||
+        h.includes('tiempo hablado')
+      );
+    }
+
+    function headerLooksLikeOutcome(header) {
+      const h = normalizeText(header).replace(/[\-_]+/g, ' ');
+
+      return (
+        h.includes('disposition') ||
+        h.includes('outcome') ||
+        h.includes('resultado') ||
+        h.includes('result') ||
+        h.includes('call result') ||
+        h.includes('call outcome') ||
+        h.includes('status') ||
+        h.includes('estado') ||
+        h.includes('valid') ||
+        h.includes('validez')
+      );
+    }
+
+    function parseDurationToSeconds(value, options = {}) {
+      if (value == null) return null;
+
+      const original = String(value).trim();
+      if (!original) return null;
+
+      // Evita confundir horas del día, como 10:52 AM, con duración.
+      if (/\b(am|pm)\b/i.test(original)) return null;
+
+      // Evita confundir teléfonos o IDs largos con segundos/minutos.
+      if (/^\+?\d[\d\s().-]{6,}$/.test(original) && !original.includes(':')) return null;
+
+      const raw = stripDurationWrapper(original);
+      const allowColon = options.allowColon !== false;
+      const allowNumeric = options.allowNumeric === true;
+
+      // Solo acepta mm:ss. Se ignoran formatos hh:mm:ss para no leer horas del día.
+      if (allowColon && /^\d{1,3}:\d{1,2}$/.test(raw)) {
+        const [minutes, seconds] = raw.split(':').map(Number);
+        if (Number.isNaN(minutes) || Number.isNaN(seconds)) return null;
+        if (seconds > 59) return null;
+        return minutes * 60 + seconds;
+      }
+
+      // Números sueltos: se interpretan como segundos.
+      if (allowNumeric && /^\d+(?:\.\d+)?$/.test(raw)) {
+        const n = Number(raw);
+        if (Number.isFinite(n)) {
+          return Math.round(n);
+        }
+      }
+
+      return null;
+    }
+
+    function getDurationCandidate(cell, header = '') {
+      const raw = String(cell ?? '').trim();
+      if (!raw) return null;
+      if (/\b(am|pm)\b/i.test(raw)) return null;
+
+      const headerIsDuration = headerLooksLikeDuration(header);
+      const wrapped = hasDurationWrapper(raw);
+
+      const seconds = parseDurationToSeconds(raw, {
+        allowColon: headerIsDuration || wrapped,
+        allowNumeric: headerIsDuration
+      });
+
+      if (seconds == null) return null;
+
+      let score = 0;
+      if (headerIsDuration) score += 100;
+      if (wrapped) score += 70;
+
+      return { seconds, score };
+    }
+
+    function findDurationColumn(headers, body) {
+      let bestIndex = -1;
+      let bestScore = -Infinity;
+      const maxCols = headers.length;
+      const sampleRows = body.slice(0, 40);
+
+      for (let col = 0; col < maxCols; col++) {
+        const header = headers[col] ?? '';
+        const h = normalizeText(header).replace(/[\-_]+/g, ' ');
+        let score = headerLooksLikeDuration(header) ? 50 : 0;
+
+        if (h === 'time' || h === 'hora' || h.includes('date') || h.includes('fecha')) score -= 40;
+
+        let parsedCount = 0;
+        let wrappedCount = 0;
+        let ampmCount = 0;
+
+        for (const row of sampleRows) {
+          const raw = String(row[col] ?? '').trim();
+          if (!raw) continue;
+          if (/\b(am|pm)\b/i.test(raw)) ampmCount++;
+          if (hasDurationWrapper(raw)) wrappedCount++;
+
+          const candidate = getDurationCandidate(raw, header);
+          if (candidate) parsedCount++;
+        }
+
+        score += parsedCount * 8;
+        score += wrappedCount * 25;
+        score -= ampmCount * 30;
+
+        if (parsedCount > 0 && score > bestScore) {
+          bestScore = score;
+          bestIndex = col;
+        }
+      }
+
+      return bestScore > 0 ? bestIndex : -1;
+    }
+
+    function findDurationInRow(row, headers, durationCol) {
+      if (durationCol >= 0) {
+        const candidate = getDurationCandidate(row[durationCol], headers[durationCol]);
+        if (candidate) return candidate.seconds;
+      }
+
+      let best = null;
+
+      for (let i = 0; i < row.length; i++) {
+        const candidate = getDurationCandidate(row[i], headers[i] ?? '');
+        if (!candidate) continue;
+
+        if (!best || candidate.score > best.score) {
+          best = candidate;
+        }
+      }
+
+      return best ? best.seconds : null;
+    }
+
+    function getOutcomeColumns(headers) {
+      const columns = [];
+
+      headers.forEach((header, index) => {
+        if (headerLooksLikeOutcome(header)) columns.push(index);
+      });
+
+      return columns;
+    }
+
+    function rowText(row) {
+      return row.map(cell => normalizeText(cell)).join(' | ');
+    }
+
+    function hasDetailedOutcomeData(body) {
+      return body.some(row => {
+        const text = rowText(row);
+        return (
+          text.includes('completed call') ||
+          text.includes('left message') ||
+          text.includes('left voicemail') ||
+          text.includes('voicemail') ||
+          text.includes('missed')
+        );
+      });
+    }
+
+    function getCallFieldIndex(headers, keywords) {
+      const normHeaders = headers.map(normalizeText);
+
+      for (let i = 0; i < normHeaders.length; i++) {
+        const header = normHeaders[i];
+        if (keywords.some(keyword => header.includes(keyword))) return i;
+      }
+
+      return -1;
+    }
+
+
+    function getExactHeaderIndex(headers, names) {
+      const targets = names.map(name => normalizeText(name));
+      for (let i = 0; i < headers.length; i++) {
+        const header = normalizeText(headers[i]);
+        if (targets.includes(header)) return i;
+      }
+      return -1;
+    }
+
+    function isBonusValidCall(row, headers) {
+      const stateIndex = getCallFieldIndex(headers, ['state', 'estado']);
+      if (stateIndex < 0) return false;
+
+      const state = normalizeText(row[stateIndex]);
+      return state === 'completed';
+    }
+
+    function findColumn(headers, patterns) {
+      const normHeaders = headers.map(normalizeText);
+
+      for (let i = 0; i < normHeaders.length; i++) {
+        if (patterns.some(p => normHeaders[i].includes(p))) return i;
+      }
+
+      return -1;
+    }
+
+    function showMessage(el, text) {
+      el.textContent = text;
+      el.style.display = 'block';
+    }
+
+    function clearMessage(el) {
+      el.textContent = '';
+      el.style.display = 'none';
+    }
+
+
+    function getManualTotalSeconds() {
+      return state.manualEntries.reduce((sum, entry) => sum + entry.seconds, 0);
+    }
+
+    function getTotalSeconds() {
+      return state.csvBaseSeconds + state.csvBonusSeconds + getManualTotalSeconds();
+    }
+
+    function renderManualEntries() {
+      const manualSecondsTotal = getManualTotalSeconds();
+      manualTotal.textContent = formatHMS(manualSecondsTotal);
+      manualTotalMin.textContent = formatMin(manualSecondsTotal);
+      clearManualTimesBtn.disabled = state.manualEntries.length === 0;
+
+      if (!state.manualEntries.length) {
+        manualList.innerHTML = '<div class="manual-empty">Sin tiempos manuales</div>';
+        return;
+      }
+
+      manualList.innerHTML = '';
+
+      state.manualEntries.forEach((entry, index) => {
+        const item = document.createElement('div');
+        item.className = 'manual-item';
+
+        const label = document.createElement('span');
+        label.textContent = `${index + 1}. ${formatHMS(entry.seconds)}`;
+
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'delete-btn';
+        button.dataset.deleteManual = entry.id;
+        button.textContent = 'Borrar';
+
+        item.append(label, button);
+        manualList.appendChild(item);
+      });
+    }
+
+    function renderAll() {
+      const totalSeconds = getTotalSeconds();
+      state.lastTotalSeconds = totalSeconds;
+
+      totalDtt.textContent = formatHMS(totalSeconds);
+      totalDttMin.textContent = formatMin(totalSeconds);
+      validCalls.textContent = String(state.csvValidCalls);
+      rowsParsed.textContent = `${state.csvRows} filas leídas`;
+      avgDuration.textContent = state.csvValidCalls ? formatHMS(state.csvValidBaseSeconds / state.csvValidCalls) : '00:00:00';
+
+      fileName.textContent = state.lastFileName || 'Sin archivo';
+      lastDrop.textContent = state.lastDropTime || '-';
+
+      renderManualEntries();
+      updateProgress(totalSeconds);
+      document.getElementById('baseTime').textContent = formatHMS(state.csvBaseSeconds);
+      document.getElementById('bonusTime').textContent = formatHMS(state.csvBonusSeconds);
+      document.getElementById('manualBreakdown').textContent = formatHMS(getManualTotalSeconds());
+      persist();
+    }
+
+    function updateProgress(totalSeconds) {
+      const goalMinutes = Math.max(1, Number(goalInput.value) || 70);
+      const goalSeconds = goalMinutes * 60;
+      const pct = Math.min(100, (totalSeconds / goalSeconds) * 100);
+
+      progressBar.style.width = pct.toFixed(1) + '%';
+      progressLabel.textContent = pct.toFixed(1) + '%';
+      goalLabel.textContent = goalMinutes + ' min';
+    }
+
+    function renderSummary({ baseSeconds, bonusSeconds, validCount, validBaseSeconds, timedCount, rowsCount, fileNameValue }) {
+      state.csvBaseSeconds = baseSeconds;
+      state.csvBonusSeconds = bonusSeconds;
+      state.csvValidCalls = validCount;
+      state.csvValidBaseSeconds = validBaseSeconds;
+      state.csvTimedCalls = timedCount;
+      state.csvRows = rowsCount;
+      state.lastFileName = fileNameValue;
+      state.lastDropTime = fileNameValue
+        ? new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        : '';
+
+      renderAll();
+    }
+
+    function splitNonEmptyLines(text) {
+      return String(text ?? '')
+        .split(/\r?\n/)
+        .map(line => line.trim())
+        .filter(Boolean);
+    }
+
+    function isTimeOfDayLine(value) {
+      return /^\d{1,2}:\d{2}\s*(AM|PM)$/i.test(String(value ?? '').trim());
+    }
+
+    function isStandaloneDurationLine(value) {
+      const raw = String(value ?? '').trim();
+      if (!raw || /\b(am|pm)\b/i.test(raw)) return false;
+      return /^['"]?[\(\[]?\s*\d{1,3}(?::\d{1,2}){1,2}\s*[\)\]]?['"]?$/.test(raw);
+    }
+
+    function shouldUseFlatCallLogParser(text, rows) {
+      const lines = splitNonEmptyLines(text);
+      const durationLines = lines.filter(line => {
+        if (!isStandaloneDurationLine(line)) return false;
+        return parseDurationToSeconds(line, { allowColon: true, allowNumeric: false }) != null;
+      }).length;
+      const timeLines = lines.filter(isTimeOfDayLine).length;
+      const mostlySingleColumn = rows.length > 0 && rows.filter(row => row.length <= 1).length / rows.length > 0.85;
+
+      return durationLines > 0 && (mostlySingleColumn || timeLines > 0);
+    }
+
+    function parseFlatCallLog(text) {
+      const lines = splitNonEmptyLines(text);
+      const stateLines = lines.filter(line => normalizeText(line) === 'completed');
+
+      let baseSeconds = 0;
+      let bonusSeconds = 0;
+      let validBaseSeconds = 0;
+      let validCount = 0;
+      let timedCount = 0;
+
+      for (let i = 0; i < lines.length; i++) {
+        if (!isStandaloneDurationLine(lines[i])) continue;
+
+        const seconds = parseDurationToSeconds(lines[i], { allowColon: true, allowNumeric: false });
+        if (seconds == null) continue;
+
+        timedCount++;
+        baseSeconds += seconds;
+
+        const window = lines.slice(Math.max(0, i - 8), Math.min(lines.length, i + 9));
+        const windowText = normalizeText(window.join(' | '));
+        const rowValid = windowText.includes('state') && windowText.includes('completed');
+
+        if (rowValid) {
+          validCount++;
+          validBaseSeconds += seconds;
+          bonusSeconds += 60;
+        }
+      }
+
+      const rowsCount = lines.filter(isTimeOfDayLine).length || timedCount;
+
+      return {
+        baseSeconds,
+        bonusSeconds,
+        validBaseSeconds,
+        validCount,
+        timedCount,
+        rowsCount
+      };
+    }
+
+    function parseFile(text, filename) {
+      const lineSample = text.slice(0, 2000);
+      const delimiter = detectDelimiter(lineSample);
+      const rows = parseCSV(text, delimiter);
+
+      if (!rows.length) throw new Error('No pude leer el CSV.');
+
+      const headers = rows[0].map(h => String(h ?? '').trim());
+      const body = rows.slice(1);
+
+      const durationCol = getExactHeaderIndex(headers, ['Duration in Seconds']);
+      const stateCol = getExactHeaderIndex(headers, ['State']);
+
+      if (durationCol < 0) {
+        throw new Error('No encontré la columna exacta "Duration in Seconds".');
+      }
+
+      if (stateCol < 0) {
+        throw new Error('No encontré la columna exacta "State".');
+      }
+
+      let baseSeconds = 0;
+      let bonusSeconds = 0;
+      let validBaseSeconds = 0;
+      let validCount = 0;
+      let timedCount = 0;
+      let rowsCount = 0;
+
+      for (const row of body) {
+        if (!row.some(v => String(v ?? '').trim() !== '')) continue;
+
+        rowsCount++;
+
+        const seconds = parseDurationToSeconds(row[durationCol], {
+          allowColon: true,
+          allowNumeric: true
+        });
+
+        if (seconds == null) continue;
+
+        timedCount++;
+        baseSeconds += seconds;
+
+        const state = normalizeText(row[stateCol]);
+        const rowValid = state === 'completed';
+
+        if (rowValid) {
+          validCount++;
+          validBaseSeconds += seconds;
+          bonusSeconds += 60;
+        }
+      }
+
+      if (!rowsCount) throw new Error('El CSV está vacío.');
+
+      if (!baseSeconds && timedCount === 0) {
+        throw new Error('No encontré una duración legible. Usa la columna Duration in Seconds.');
+      }
+
+      renderSummary({
+        baseSeconds,
+        bonusSeconds,
+        validCount,
+        validBaseSeconds,
+        timedCount,
+        rowsCount,
+        fileNameValue: filename
+      });
+
+      const baseLabel = formatHMS(baseSeconds);
+      const bonusLabel = formatHMS(bonusSeconds);
+      const totalLabel = formatHMS(baseSeconds + bonusSeconds);
+
+      showMessage(
+        successStatus,
+        `Listo: ${timedCount} llamadas con duración, ${validCount} válidas para bono por State=Completed. Base ${baseLabel} + bono ${bonusLabel} = ${totalLabel}.`
+      );
+      clearMessage(errorStatus);
+    }
+
+    async function handleFile(file) {
+      if (!file) return;
+
+      const looksLikeCSV =
+        /\.csv$/i.test(file.name) ||
+        file.type.includes('csv') ||
+        file.type.includes('text') ||
+        file.type === '';
+
+      if (!looksLikeCSV) {
+        showMessage(errorStatus, 'Ese archivo no parece ser un CSV.');
+        clearMessage(successStatus);
+        return;
+      }
+
+      const uploadDay = activeDay;
+      try {
+        const text = await file.text();
+        if (uploadDay !== activeDay) { showMessage(errorStatus, 'El día cambió durante la carga. Vuelve a seleccionar el archivo.'); return; }
+        parseFile(text, file.name);
+      } catch (err) {
+        showMessage(errorStatus, err.message || 'No se pudo procesar el archivo.');
+        clearMessage(successStatus);
+      }
+    }
+
+    function readManualNumber(input) {
+      const n = Number(input.value);
+      if (!Number.isFinite(n)) return 0;
+      return Math.max(0, Math.floor(n));
+    }
+
+    function clearManualInputs() {
+      manualHours.value = '';
+      manualMinutes.value = '';
+      manualSeconds.value = '';
+      manualHours.focus();
+    }
+
+    function addManualTime() {
+      const hours = readManualNumber(manualHours);
+      const minutes = readManualNumber(manualMinutes);
+      const seconds = readManualNumber(manualSeconds);
+      const totalSeconds = (hours * 3600) + (minutes * 60) + seconds;
+
+      if (minutes > 59 || seconds > 59) {
+        showMessage(errorStatus, 'Min y seg deben estar entre 0 y 59.');
+        clearMessage(successStatus);
+        return;
+      }
+
+      if (totalSeconds <= 0) {
+        showMessage(errorStatus, 'Agrega una hora, minuto o segundo mayor que cero.');
+        clearMessage(successStatus);
+        return;
+      }
+
+      const id = window.crypto && crypto.randomUUID
+        ? crypto.randomUUID()
+        : String(Date.now() + Math.random());
+
+      state.manualEntries.push({ id, seconds: totalSeconds });
+      clearManualInputs();
+      renderAll();
+
+      showMessage(successStatus, `Tiempo manual agregado: ${formatHMS(totalSeconds)}.`);
+      clearMessage(errorStatus);
+    }
+
+    function deleteManualTime(id) {
+      state.manualEntries = state.manualEntries.filter(entry => entry.id !== id);
+      renderAll();
+      showMessage(successStatus, 'Tiempo manual borrado.');
+      clearMessage(errorStatus);
+    }
+
+    function clearManualTimes() {
+      if (!state.manualEntries.length) return;
+      state.manualEntries = [];
+      renderAll();
+      showMessage(successStatus, 'Tiempos manuales borrados.');
+      clearMessage(errorStatus);
+    }
+
+    dropzone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropzone.classList.add('dragover');
+    });
+
+    dropzone.addEventListener('dragleave', () => {
+      dropzone.classList.remove('dragover');
+    });
+
+    dropzone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+
+      const file = e.dataTransfer.files?.[0];
+      handleFile(file);
+    });
+
+    fileInput.addEventListener('change', () => {
+      handleFile(fileInput.files?.[0]);
+      fileInput.value = '';
+    });
+
+
+    addManualTimeBtn.addEventListener('click', addManualTime);
+    clearManualTimesBtn.addEventListener('click', clearManualTimes);
+
+    manualList.addEventListener('click', (e) => {
+      const button = e.target.closest('[data-delete-manual]');
+      if (!button) return;
+      deleteManualTime(button.dataset.deleteManual);
+    });
+
+    [manualHours, manualMinutes, manualSeconds].forEach(input => {
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') addManualTime();
+      });
+    });
+
+    goalInput.addEventListener('input', () => {
+      updateProgress(getTotalSeconds());
+      persist();
+    });
+
+    dropzone.addEventListener('click', () => fileInput.click());
+    dropzone.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); fileInput.click(); } });
+    dayInput.addEventListener('change', () => {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dayInput.value)) { dayInput.value = activeDay; return; }
+      persist(); activeDay = dayInput.value;
+      Object.assign(state, restoreState(activeDay)); restoreGoal();
+      fileInput.value = ''; clearManualInputs(); clearMessage(successStatus); clearMessage(errorStatus); renderAll();
+    });
+    document.getElementById('resetDay').addEventListener('click', () => {
+      if (!window.confirm('¿Reiniciar el CSV y los tiempos manuales del ' + activeDay + '?')) return;
+      Object.assign(state, emptyState()); fileInput.value = ''; renderAll();
+      showMessage(successStatus, 'Día reiniciado.'); clearMessage(errorStatus);
+    });
+    document.getElementById('exportSummary').addEventListener('click', () => {
+      const csvCell = value => '"' + String(value).replace(/"/g,'""') + '"';
+      const rows = [ ['Fecha','Archivo','Duración base (seg)','Bono (seg)','Tiempo manual (seg)','DTT total (seg)','DTT total','Llamadas Completed','Llamadas con duración','Filas','Meta (min)'], [activeDay,state.lastFileName,state.csvBaseSeconds,state.csvBonusSeconds,getManualTotalSeconds(),getTotalSeconds(),formatHMS(getTotalSeconds()),state.csvValidCalls,state.csvTimedCalls,state.csvRows,Math.max(1,Number(goalInput.value)||70)] ];
+      const blob = new Blob(['\ufeff' + rows.map(row=>row.map(csvCell).join(',')).join('\r\n')], {type:'text/csv;charset=utf-8'});
+      const url = URL.createObjectURL(blob), a = document.createElement('a');
+      a.href = url; a.download = 'DTT-' + activeDay + '.csv'; document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1000);
+    });
+    renderAll();
+  
+    if (window.parent !== window && typeof ResizeObserver !== 'undefined') {
+      const reportHeight = () => window.parent.postMessage({type:'ddhub-dtt-height',height:Math.ceil(document.querySelector('.wrap').getBoundingClientRect().height)+12}, location.origin === 'null' ? '*' : location.origin);
+      new ResizeObserver(reportHeight).observe(document.querySelector('.wrap'));
+      reportHeight();
+    }
+  </script>
+</body>
+</html>
