@@ -5,16 +5,29 @@ const server=http.createServer((req,res)=>{let file=path.join(root,decodeURI(req
 (async()=>{const browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE}:{})});try{
  const p=await browser.newPage({viewport:{width:1280,height:900}}),errors=[];p.on('pageerror',e=>errors.push(e.message));
  await p.goto('http://localhost:8134/tools/video.html');await p.locator('[data-action=new]').first().click();
+ const bar=p.locator('#playhead'),ruler=p.locator('#ruler');let b=await bar.boundingBox();
+ // A fresh project has no media but its 20-second navigation ruler is draggable.
+ assert.equal(await p.evaluate(()=>app.project.clips.length),0);
+ await p.mouse.move(b.x+b.width/2,b.y+8);await p.mouse.down();await p.mouse.move(b.x+b.width/2+140,b.y+8,{steps:8});await p.mouse.up();
+ await p.waitForTimeout(100);assert.equal(await bar.getAttribute('aria-valuenow'),'2');assert.equal(await bar.getAttribute('aria-valuemax'),'20');
+ assert.equal(await p.evaluate(()=>EditorModel.duration(app.project)),0,'scrubbing adds no export duration');
+ await bar.focus();await p.keyboard.press('End');await p.waitForTimeout(80);assert.equal(await bar.getAttribute('aria-valuenow'),'20');
+ await p.keyboard.press('Home');await p.waitForTimeout(80);assert.equal(await bar.getAttribute('aria-valuenow'),'0');
+ await p.evaluate(()=>app.seek(10));
  await p.locator('[data-tab=text]').click();await p.locator('[data-text-style=title]').click();
  assert.equal(await p.evaluate(()=>app.project.clips.length),1);
- const bar=p.locator('#playhead'),ruler=p.locator('#ruler');let b=await bar.boundingBox();
+ assert.equal(await p.evaluate(()=>app.project.clips[0].start),10);
+ assert.equal(await p.evaluate(()=>EditorModel.duration(app.project)),15);
+ assert.equal(await p.evaluate(()=>app.time),10);
+ await p.evaluate(()=>app.seek(0));
+ b=await bar.boundingBox();
  await p.mouse.move(b.x+b.width/2,b.y+8);await p.mouse.down();await p.mouse.move(b.x+b.width/2+140,b.y+8,{steps:8});await p.waitForTimeout(120);const during=await p.evaluate(()=>app.time);assert(during>1.8&&during<2.2,`drag during ${during}`);await p.mouse.up();
  await p.waitForTimeout(100);assert.equal(await bar.getAttribute('aria-valuenow'),'2');
  await bar.focus();await p.keyboard.press('Shift+ArrowRight');await p.waitForTimeout(80);assert.equal(await bar.getAttribute('aria-valuenow'),'3');
- await p.keyboard.press('End');await p.waitForTimeout(80);assert.equal(await bar.getAttribute('aria-valuenow'),'5');
+ await p.keyboard.press('End');await p.waitForTimeout(80);assert.equal(await bar.getAttribute('aria-valuenow'),'15');
  await p.keyboard.press('Home');await p.waitForTimeout(80);assert.equal(await bar.getAttribute('aria-valuenow'),'0');
  // Ruler down-to-move, bounded at project end.
- b=await ruler.boundingBox();await p.mouse.move(b.x+35,b.y+12);await p.mouse.down();await p.mouse.move(b.x+280,b.y+12,{steps:7});await p.mouse.up();await p.waitForTimeout(80);assert.equal(await bar.getAttribute('aria-valuenow'),'4');
+ b=await ruler.boundingBox();await p.mouse.move(b.x+144+35,b.y+12);await p.mouse.down();await p.mouse.move(b.x+144+280,b.y+12,{steps:7});await p.mouse.up();await p.waitForTimeout(80);assert.equal(await bar.getAttribute('aria-valuenow'),'4');
  await p.evaluate(()=>{app.zoom=210;app.refresh();document.querySelector('#timelineScroll').scrollLeft=300});
  b=await bar.boundingBox();await p.mouse.move(b.x+b.width/2,b.y+8);await p.mouse.down();await p.mouse.move(b.x+b.width/2-210,b.y+8,{steps:8});await p.mouse.up();await p.waitForTimeout(80);let t=await p.evaluate(()=>app.time);assert(Math.abs(t-3)<.05,`scrolled zoom drag ${t}`);
  await p.screenshot({path:'/tmp/video-verified.png'});assert.deepEqual(errors,[]);console.log(JSON.stringify({passed:true,mouseDragDuring: during,scrolledZoomTime:t,errors}));

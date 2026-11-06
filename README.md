@@ -1,11 +1,11 @@
 # DD Tool Hub
 
-Un espacio claro estilo bento con cuatro herramientas para el trabajo diario.
+Un espacio simple de tarjetas bento en blanco, gris y rojo DoorDash, con cuatro herramientas para el trabajo diario. El inicio prioriza DTT de hoy, seguimientos de hoy y vencidos.
 
 **Sitio:** https://alvaroporras2002-coder.github.io/DD-tool-hub/
 
 - **DTT Tracker:** importa el CSV de llamadas, calcula tiempo base y bono, permite tiempos manuales, metas e historial por día.
-- **Video Studio:** editor completo incorporado desde `video-corrector`, con proyectos, biblioteca, texto, audio, capas y exportación. Cabezal de reproducción arrastrable con mouse, touch o lápiz, zoom y scroll; flechas para avanzar por cuadros, Shift para segundos, Home/End.
+- **Video Studio:** editor completo incorporado desde `video-corrector`, con proyectos, biblioteca, texto, audio, capas y exportación. Cabezal de reproducción arrastrable con mouse, touch o lápiz, zoom y scroll; flechas para avanzar por cuadros, Shift para segundos, Home/End. En proyectos vacíos se puede recorrer una regla de 20 segundos antes de importar archivos, sin agregar duración al contenido ni a la exportación.
 - **Call Notes:** las 11 preguntas y sus respuestas originales, instrucciones contextuales, nota en inglés en vivo, copia, descarga, borrador automático e historial editable.
 - **Follow-up Map:** calendario mensual, agenda diaria, creación/edición, prioridades, pendientes/completados, búsqueda, filtros, copia JSON y exportación .ics. Una nota puede convertirse en seguimiento.
 
