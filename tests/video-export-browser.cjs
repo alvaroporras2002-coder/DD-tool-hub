@@ -12,7 +12,7 @@ const server=http.createServer((req,res)=>{const file=path.join(root,decodeURI(r
  // This block requires a real installed browser; Node API mocks do not replace it.
  const encoded=await p.evaluate(async()=>{
   const text=app.project.clips.find(c=>c.type==='text');text.start=0;text.duration=.7;
-  app.project.clips=[text];app.project.width=640;app.project.height=360;app.project.fps=24;
+  app.project.clips=[text];app.project.width=640;app.project.height=360;app.project.fps=24;app.canvas.width=640;app.canvas.height=360;
   app.refresh();await app.seek(0);
   const formats=Engine.supportedTypes();if(!formats.length)throw new Error('Browser has no supported export codec');
   const result=await Engine.exportVideo({width:640,height:360,fps:24,mimeType:formats[0]});
@@ -48,7 +48,7 @@ const server=http.createServer((req,res)=>{const file=path.join(root,decodeURI(r
   const [media]=await Store.importFiles([new File([fixtureBlob],'source-audio-video.'+extension,{type:fixtureBlob.type})]);
   app.media.set(media.id,media);const tr=app.project.tracks.find(track=>track.type==='video');
   const clip=EditorModel.clip('video',media.id,tr.id,0,Math.min(.8,media.duration));clip.name='Decoded source fixture';
-  app.project.clips=[clip];app.project.width=640;app.project.height=360;app.project.fps=24;app.refresh();await app.seek(0);
+  app.project.clips=[clip];app.project.width=640;app.project.height=360;app.project.fps=24;app.canvas.width=640;app.canvas.height=360;app.refresh();await app.seek(0);
   const result=await Engine.exportVideo({fps:24,mimeType:mime,quality:'high'});
   const video=document.createElement('video');video.muted=true;video.playsInline=true;const url=URL.createObjectURL(result.blob);video.src=url;
   let decoder;
@@ -56,15 +56,27 @@ const server=http.createServer((req,res)=>{const file=path.join(root,decodeURI(r
    await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Media export did not decode')),10000);video.onloadeddata=()=>{clearTimeout(timer);resolve();};video.onerror=()=>{clearTimeout(timer);reject(new Error('Media export decode error'));};video.load();});
    const sample=document.createElement('canvas');sample.width=video.videoWidth;sample.height=video.videoHeight;sample.getContext('2d').drawImage(video,0,0);
    const pixels=sample.getContext('2d').getImageData(0,0,sample.width,sample.height).data;let luma=0;for(let i=0;i<pixels.length;i+=4)luma+=pixels[i];luma/=pixels.length/4;
+   // Four-pixel monochrome bars are unchanged in this region by the caption
+   // and moving box. Compare the actual decoded output with the known source.
+   let stripeError=0,stripeCount=0,blackSum=0,whiteSum=0,blackCount=0,whiteCount=0;
+   for(let y=256;y<512;y++)for(let x=256;x<1024;x++){
+    const i=(y*sample.width+x)*4,value=pixels[i]*.2126+pixels[i+1]*.7152+pixels[i+2]*.0722,expected=x%8<4?0:255;
+    stripeError+=Math.abs(value-expected);stripeCount++;
+    if(expected===0){blackSum+=value;blackCount++;}else{whiteSum+=value;whiteCount++;}
+   }
+   const stripeMeanAbsoluteError=stripeError/stripeCount,stripeContrast=whiteSum/whiteCount-blackSum/blackCount;
    let decodedFrames=0,frameHandle;const count=()=>{decodedFrames++;frameHandle=video.requestVideoFrameCallback(count);};if(video.requestVideoFrameCallback)frameHandle=video.requestVideoFrameCallback(count);
    await video.play();await new Promise(resolve=>setTimeout(resolve,600));video.pause();if(frameHandle!==undefined)video.cancelVideoFrameCallback(frameHandle);
    decoder=new AudioContext();const audioData=await decoder.decodeAudioData(await result.blob.arrayBuffer()),samples=audioData.getChannelData(0);let power=0;for(const sample of samples)power+=sample*sample;const rms=Math.sqrt(power/samples.length);
-   return {metadata:{width:video.videoWidth,height:video.videoHeight,duration:Number.isFinite(video.duration)?video.duration:null,mime:result.mimeType,sourceWidth:media.width,sourceHeight:media.height,projectWidth:app.project.width,projectHeight:app.project.height,firstFrameMeanLuma:luma,decodedFrames,audioChannels:audioData.numberOfChannels,audioDuration:audioData.duration,audioRms:rms,framesDrawn:result.framesDrawn,droppedFrames:result.droppedFrames},bytes:Array.from(new Uint8Array(await result.blob.arrayBuffer())),extension:result.extension};
+   return {metadata:{width:video.videoWidth,height:video.videoHeight,duration:Number.isFinite(video.duration)?video.duration:null,mime:result.mimeType,sourceWidth:media.width,sourceHeight:media.height,projectWidth:app.project.width,projectHeight:app.project.height,firstFrameMeanLuma:luma,stripeMeanAbsoluteError,stripeContrast,decodedFrames,audioChannels:audioData.numberOfChannels,audioDuration:audioData.duration,audioRms:rms,framesDrawn:result.framesDrawn,droppedFrames:result.droppedFrames},bytes:Array.from(new Uint8Array(await result.blob.arrayBuffer())),extension:result.extension};
   }finally{video.removeAttribute('src');video.load();URL.revokeObjectURL(url);if(decoder)await decoder.close();}
  });
- const mediaStats=mediaExport.metadata;assert.equal(mediaStats.width,1280,'auto export retains native source width above old project width');assert.equal(mediaStats.height,720);assert.equal(mediaStats.projectWidth,640,'saved composition is not migrated');assert(mediaStats.firstFrameMeanLuma>40,'first decoded frame contains source image');assert(mediaStats.audioChannels>=1);assert(mediaStats.audioRms>.01,'mixed audio tone is present');assert(mediaStats.audioDuration>.5);if(mediaStats.decodedFrames)assert(mediaStats.decodedFrames>=8,'export contains a stream of decoded frames');
+ const mediaStats=mediaExport.metadata;
  fs.writeFileSync(path.join(artifacts,'video-export-sample.'+mediaExport.extension),Buffer.from(mediaExport.bytes));
  fs.writeFileSync(path.join(artifacts,'video-export-metadata.json'),JSON.stringify(mediaStats,null,2));
+ assert(mediaStats.stripeMeanAbsoluteError<35,`decoded stripe MAE must retain source detail: ${mediaStats.stripeMeanAbsoluteError.toFixed(2)}`);
+ assert(mediaStats.stripeContrast>170,`decoded stripe contrast must retain source detail: ${mediaStats.stripeContrast.toFixed(2)}`);
+ assert.equal(mediaStats.width,1280,'auto export retains native source width above old project width');assert.equal(mediaStats.height,720);assert.equal(mediaStats.projectWidth,640,'saved composition is not migrated');assert(mediaStats.firstFrameMeanLuma>40,'first decoded frame contains source image');assert(mediaStats.audioChannels>=1);assert(mediaStats.audioRms>.01,'mixed audio tone is present');assert(mediaStats.audioDuration>.5);if(mediaStats.decodedFrames)assert(mediaStats.decodedFrames>=8,'export contains a stream of decoded frames');
  await p.screenshot({path:path.join(artifacts,'video-editor-export.png')});assert.deepEqual(errors,[]);console.log(JSON.stringify({actualBrowserMediaAndAudioPassed:true,...mediaStats,scope:'actual source encode/import/composition/output encode/video decode/audio decode; precise A/V synchronization not measured'}));
 
  }finally{if(browser)await browser.close();server.close();}})().catch(error=>{console.error(error);server.close();process.exit(1)});
