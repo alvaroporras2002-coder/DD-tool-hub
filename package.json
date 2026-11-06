@@ -8,7 +8,11 @@
     "test:dom": "node tests/hub-dom.cjs",
     "test:browser": "node tests/hub-browser.cjs && node tests/notes-smoke.cjs && node tests/video-browser.cjs && node tests/video-export-browser.cjs",
     "test:render": "node tests/export-review.cjs",
-    "test:export": "node tests/video-export.cjs"
+    "test:export": "node tests/video-export.cjs",
+    "test:browser:hub": "node tests/hub-browser.cjs",
+    "test:browser:notes": "node tests/notes-smoke.cjs",
+    "test:browser:timeline": "node tests/video-browser.cjs",
+    "test:browser:export": "node tests/video-export-browser.cjs"
   },
   "devDependencies": {
     "basichtml": "2.4.9",

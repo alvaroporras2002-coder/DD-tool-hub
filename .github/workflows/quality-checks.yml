@@ -17,6 +17,7 @@ jobs:
       - name: Install test dependencies
         run: npm install --ignore-scripts
       - name: Install Chromium
+        id: chromium
         run: npx playwright install --with-deps chromium
       - name: Logic and export lifecycle
         id: logic
@@ -24,12 +25,20 @@ jobs:
       - name: 'Logic result: ${{ steps.logic.outputs.detail }}'
         if: always()
         run: echo 'Logic checks finished.'
-      - name: Browser and real video export
+      - name: Browser workspace and timeline
         id: browser
-        run: node tests/ci-runner.cjs test:browser
+        if: ${{ !cancelled() && steps.chromium.outcome == 'success' }}
+        run: node tests/ci-runner.cjs test:browser:hub test:browser:notes test:browser:timeline
       - name: 'Browser result: ${{ steps.browser.outputs.detail }}'
         if: always()
         run: echo 'Browser checks finished.'
+      - name: Real video and audio export
+        id: video
+        if: ${{ !cancelled() && steps.chromium.outcome == 'success' }}
+        run: node tests/ci-runner.cjs test:browser:export
+      - name: 'Video result: ${{ steps.video.outputs.detail }}'
+        if: always()
+        run: echo 'Video export check finished.'
       - name: Save screenshots and export samples
         if: always()
         uses: actions/upload-artifact@v4
