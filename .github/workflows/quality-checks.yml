@@ -5,6 +5,8 @@ on:
   pull_request:
 permissions:
   contents: read
+  actions: read
+  checks: read
 jobs:
   quality:
     runs-on: ubuntu-latest
@@ -48,6 +50,15 @@ jobs:
       - name: 'File result: ${{ steps.fileverify.outputs.detail }}'
         if: always()
         run: echo 'Independent file verification finished.'
+      - name: Inspect previous Pages deployment
+        id: pages
+        if: always()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node tests/pages-status.cjs
+      - name: '${{ steps.pages.outputs.detail }}'
+        if: always()
+        run: echo 'Read-only Pages diagnosis finished.'
       - name: Save screenshots and export samples
         if: always()
         uses: actions/upload-artifact@v4
