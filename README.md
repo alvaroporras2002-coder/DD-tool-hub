@@ -1,6 +1,6 @@
 # DD Tool Hub
 
-Un espacio simple de tarjetas bento en blanco, gris y rojo DoorDash, con cuatro herramientas para el trabajo diario. El inicio prioriza DTT de hoy, seguimientos de hoy y vencidos.
+Un espacio minimalista con fondo negro, texto claro y cuatro herramientas para el trabajo diario. Se retiraron el aviso superior de guardado, el botón de ayuda y los pies de página. El inicio prioriza DTT de hoy, seguimientos de hoy y vencidos.
 
 **Sitio:** https://alvaroporras2002-coder.github.io/DD-tool-hub/
 

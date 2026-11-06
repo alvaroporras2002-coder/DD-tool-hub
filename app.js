@@ -30,7 +30,6 @@ window.addEventListener('hashchange',navigate);
 window.addEventListener('hub-data-changed',()=>{if(active==='home')renderHome();});
 window.addEventListener('hub-followup',e=>{location.hash='followups';navigate();});
 window.addEventListener('storage',()=>{if(active==='home')renderHome();});
-$('#guideButton').addEventListener('click',()=>$('#guideDialog').showModal());$('#closeGuide').addEventListener('click',()=>$('#guideDialog').close());$('#guideDialog').addEventListener('click',e=>{if(e.target===$('#guideDialog')){const r=e.target.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)e.target.close();}});
 $('#backupButton').addEventListener('click',()=>{const keys=['ddhub.notes.v1','ddhub.followups.v1','ddhub.dtt.v1'];const data={format:'dd-tool-hub',version:1,exported:new Date().toISOString(),data:Object.fromEntries(keys.map(k=>[k,Hub.load(k,null)]))};Hub.download(`dd-tool-hub-${localDay()}.json`,JSON.stringify(data,null,2),'application/json');Hub.toast('Respaldo descargado. Los videos se respaldan desde Video Studio.');});
 function validBackup(data){
  if(!data||data.format!=='dd-tool-hub'||data.version!==1||!data.data||Array.isArray(data.data))throw Error('Elige un respaldo JSON exportado desde DD Tool Hub.');

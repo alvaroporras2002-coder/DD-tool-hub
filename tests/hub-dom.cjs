@@ -27,6 +27,9 @@ vm.runInContext(app,ctx);w.Hub.download=(...args)=>downloads.push(args);
 const q=s=>D.querySelector(s),fire=(n,type)=>n.dispatchEvent(new TestEvent(type,{bubbles:true}));
 function input(sel,value,type='input'){const n=q(sel);n.value=value;fire(n,type)}
 assert.equal(q('#homeDtt').textContent,'00:00:00');assert.equal(q('#view-home').hidden,false);
+assert.equal(q('#guideButton'),null);assert.equal(q('#guideDialog'),null);assert.equal(q('.local-status'),null);assert.equal(q('footer'),null);assert(!D.body.textContent.includes('Datos guardados en este navegador.'));
+assert(!fs.readFileSync(require('path').join(__dirname,'../tools/dtt.html'),'utf8').includes('Actualiza el CSV del día para consultar tu DTT.'));
+
 input('[data-notes-field="merchant"]','Zenza Pizzeria');
 input('[data-notes-field="details"]','Discuss menu photos and follow up next week.');
 for(const [key,,choices]of w.Notes.questions)input('[data-notes-answer="'+key+'"]',choices[0][0],'change');
