@@ -1,0 +1,35 @@
+name: Hub and video quality
+on:
+  push:
+    branches: [main, feature/brand-video-quality]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install test dependencies
+        run: npm install --ignore-scripts
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Logic and export lifecycle
+        run: |
+          npm test
+          npm run test:export
+          npm run test:render
+          npm run test:dom
+      - name: Browser and real video export
+        run: npm run test:browser
+      - name: Save screenshots and export samples
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: hub-video-verification
+          path: tests/artifacts/
+          if-no-files-found: ignore

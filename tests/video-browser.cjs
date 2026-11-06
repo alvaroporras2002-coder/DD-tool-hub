@@ -2,7 +2,7 @@ const { chromium } = require('playwright');
 const http = require('http'), fs=require('fs'), path=require('path'), assert=require('assert');
 const root=path.join(__dirname,'..');
 const server=http.createServer((req,res)=>{let file=path.join(root,decodeURI(req.url.split('?')[0]));try{let data=fs.readFileSync(file);res.setHeader('content-type',file.endsWith('.html')?'text/html':'application/json');res.end(data);}catch{res.statusCode=404;res.end('missing')}}).listen(8134);
-(async()=>{const browser=await chromium.launch({headless:true,...(process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE}:{})});try{
+(async()=>{const browser=await chromium.launch({headless:true,args:['--autoplay-policy=no-user-gesture-required'],...(process.env.CHROMIUM_EXECUTABLE?{executablePath:process.env.CHROMIUM_EXECUTABLE}:{})});try{
  const p=await browser.newPage({viewport:{width:1280,height:900}}),errors=[];p.on('pageerror',e=>errors.push(e.message));
  await p.goto('http://localhost:8134/tools/video.html');await p.locator('[data-action=new]').first().click();
  const bar=p.locator('#playhead'),ruler=p.locator('#ruler');let b=await bar.boundingBox();
@@ -33,4 +33,5 @@ const server=http.createServer((req,res)=>{let file=path.join(root,decodeURI(req
  await p.screenshot({path:'/tmp/video-verified.png'});assert.deepEqual(errors,[]);console.log(JSON.stringify({passed:true,mouseDragDuring: during,scrolledZoomTime:t,errors}));
  // Touch movement via dispatched pointer events tests capture/cancel and last-value queue.
  await p.evaluate(()=>{const bar=document.querySelector('#playhead');const b=bar.getBoundingClientRect(),x=b.x+b.width/2,y=b.y+8;bar.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,pointerId:4,pointerType:'touch',button:0,clientX:x,clientY:y}));document.querySelector('#timelineInner').dispatchEvent(new PointerEvent('pointermove',{bubbles:true,pointerId:4,pointerType:'touch',clientX:x+105,clientY:y}));document.querySelector('#timelineInner').dispatchEvent(new PointerEvent('pointercancel',{bubbles:true,pointerId:4,pointerType:'touch',clientX:x+105,clientY:y}));});await p.waitForTimeout(100);t=await p.evaluate(()=>app.time);assert(Math.abs(t-3.5)<.05,`touch ${t}`);assert.equal(await p.locator('.playhead.dragging').count(),0);console.log(JSON.stringify({touchCancelPassed:true,time:t}));
+
  }finally{await browser.close();server.close()}})().catch(e=>{console.error(e);server.close();process.exit(1)});

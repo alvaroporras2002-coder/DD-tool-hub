@@ -41,7 +41,12 @@ fire(q('.fu-form'),'submit');assert.equal(w.Followups.stats().total,1);assert.eq
 ctx.location.hash='#home';w.dispatchEvent(new TestEvent('hashchange'));assert.equal(q('#homeDue').textContent,'1');assert(q('#homeAgenda').textContent.includes('Zenza Pizzeria'));
 fire(q('.fu-task input'),'change');assert.equal(w.Followups.stats().completed,1);assert.equal(q('#homeDue').textContent,'0');
 ctx.location.hash='#notes';w.dispatchEvent(new TestEvent('hashchange'));input('[data-notes-field="merchant"]','<img src=x onerror=1>');fire(q('[data-notes-save]'),'click');assert.equal(q('[data-notes-history]').querySelectorAll('img').length,0);
-console.log('PASS hub DOM: initial render, exact 11 questions completion, note history, notes→calendar navigation and prefill, create followup, dashboard update, complete followup, XSS-safe history.');
+ctx.location.hash='#video';w.dispatchEvent(new TestEvent('hashchange'));assert.equal(q('#view-video').hidden,false);
+w.dispatchEvent(new TestEvent('message',{origin:'http://test',source:q('#videoFrame').contentWindow,data:{type:'ddhub-video-export-state',busy:true}}));
+ctx.location.hash='#home';w.dispatchEvent(new TestEvent('hashchange'));assert.equal(ctx.location.hash,'#video');assert.equal(q('#view-video').hidden,false);assert.equal(q('#view-home').hidden,true);
+w.dispatchEvent(new TestEvent('message',{origin:'http://test',source:q('#videoFrame').contentWindow,data:{type:'ddhub-video-export-state',busy:false}}));
+ctx.location.hash='#home';w.dispatchEvent(new TestEvent('hashchange'));assert.equal(q('#view-home').hidden,false);
+console.log('PASS hub DOM: note→calendar flows, dashboard, history escaping, export navigation guard.');
 
 (async()=>{
  locationMock.reload=()=>{locationMock.reloaded=true};

@@ -1,6 +1,6 @@
 # DD Tool Hub
 
-Un espacio minimalista con fondo negro, texto claro y cuatro herramientas para el trabajo diario. Se retiraron el aviso superior de guardado, el botón de ayuda y los pies de página. El inicio prioriza DTT de hoy, seguimientos de hoy y vencidos.
+Identidad monocromática basada en la propuesta visual de DD Tool Hub: monograma DD, contenedor de línea fina, tipografía limpia, tarjetas de grafito y jerarquía editorial. El inicio reúne DTT de hoy, seguimientos y las cuatro herramientas. Se conservan el almacenamiento y los formatos de datos existentes.
 
 **Sitio:** https://alvaroporras2002-coder.github.io/DD-tool-hub/
 
@@ -14,6 +14,16 @@ Un espacio minimalista con fondo negro, texto claro y cuatro herramientas para e
 El CSV debe incluir `Duration in Seconds` y `State`. Se suman **todas las duraciones válidas** y **60 segundos adicionales solo si State es Completed** (sin distinguir mayúsculas o espacios exteriores). Un cero válido Completed también recibe el bono, igual que el archivo original. Otros resultados, como Left Message y Missed, no reciben bono.
 
 Cada nueva carga **reemplaza** el reporte CSV del día, preservando los tiempos manuales. No se acumulan cargas repetidas. Cambia el día del reporte si el CSV pertenece a otra fecha; el archivo no se filtra automáticamente por fecha.
+
+## Calidad de exportación de video
+
+La exportación usa resolución **Automática · detalle de origen** y calidad **Alta** por defecto. Selecciona las dimensiones a partir del archivo visual principal, conserva la proporción del proyecto y limita el lado mayor a 3840 px. También permite resolución del proyecto o salidas de hasta 1080p/720p. El diálogo muestra las dimensiones de salida, FPS y tamaño estimado antes de exportar.
+
+La calidad y el bitrate objetivo se adaptan a resolución, FPS y formato. Se ofrece MP4 cuando el navegador lo admite, con alternativas WebM; los contenedores mantienen su extensión real. La rasterización del compositor conserva el detalle disponible al hacer zoom y vuelve a dibujar textos y formas a la resolución de salida.
+
+La captura sigue realizándose en tiempo real en el navegador. Se comprueban decodificación inicial, cierre y cabecera del archivo, errores, cancelación y pérdidas de ritmo; no se descarga un resultado parcial cuando falla. Mantén la pestaña visible. El hub bloquea el cambio a otra herramienta durante la exportación; puedes cancelarla desde el editor.
+
+Las pruebas de píxeles ejecutan el compositor real con un patrón de detalle nativo. El compositor anterior perdió ese detalle al hacer zoom (error medio 127,50/255); la versión corregida coincide con la referencia en ese patrón (error 0/255). **Esto comprueba la composición, no la calidad de un códec real del navegador.** Las pruebas de MediaRecorder usan dobles de las API; la codificación y sincronización reales requieren las pruebas de navegador incluidas.
 
 ## Datos y uso
 
@@ -39,10 +49,12 @@ Abre http://localhost:8000. Servir por HTTP evita restricciones de almacenamient
 
 ## Pruebas
 
-Las pruebas de lógica no necesitan instalar paquetes:
+Las pruebas de lógica principales no necesitan instalar paquetes. La verificación de píxeles usa `@napi-rs/canvas` (dependencia de desarrollo):
 
 ```sh
 npm test
+npm run test:render
+npm run test:export
 ```
 
 Comprueban el cálculo y persistencia del DTT, reglas de notas y seguimientos, ICS y secuenciación del arrastre del cabezal. Las pruebas DOM usan `basichtml` con adaptadores para eventos/formularios; no sustituyen pruebas visuales de un navegador.
