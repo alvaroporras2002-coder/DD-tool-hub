@@ -28,8 +28,11 @@ const server=http.createServer((req,res)=>{let file=path.join(root,decodeURI(req
  await p.keyboard.press('Home');await p.waitForTimeout(80);assert.equal(await bar.getAttribute('aria-valuenow'),'0');
  // Keyboard focus can retain horizontal scroll after End/Home. Reset it before
  // deriving pointer coordinates so the ruler hit lands in the visible viewport.
- await p.evaluate(()=>{document.querySelector('#timelineScroll').scrollLeft=0;});
- b=await ruler.boundingBox();await p.mouse.move(b.x+144+35,b.y+12);await p.mouse.down();await p.mouse.move(b.x+144+280,b.y+12,{steps:7});await p.mouse.up();await p.waitForTimeout(80);assert.equal(await bar.getAttribute('aria-valuenow'),'4');
+ await p.evaluate(()=>{const scroll=document.querySelector('#timelineScroll');scroll.scrollLeft=0;scroll.scrollTop=0;window.scrollTo(0,0);});
+ b=await ruler.boundingBox();
+ const rulerPointer={x:b.x+144+35,y:b.y+12},rulerHit=await p.evaluate(({x,y})=>{const hit=document.elementFromPoint(x,y),ruler=document.querySelector('#ruler'),inner=document.querySelector('#timelineInner'),scroll=document.querySelector('#timelineScroll'),rect=el=>{const r=el.getBoundingClientRect();return {x:r.x,y:r.y,width:r.width,height:r.height};};return {valid:!!hit?.closest('#ruler')&&!hit.closest('.ruler-head'),target:hit?.outerHTML.slice(0,240),ruler:rect(ruler),inner:rect(inner),scroll:rect(scroll),scrollTop:scroll.scrollTop,scrollLeft:scroll.scrollLeft};},rulerPointer);
+ assert(rulerHit.valid,'ruler pointer hit: '+JSON.stringify({pointer:rulerPointer,...rulerHit}));
+ await p.mouse.move(rulerPointer.x,rulerPointer.y);await p.mouse.down();await p.mouse.move(b.x+144+280,b.y+12,{steps:7});await p.mouse.up();await p.waitForTimeout(80);assert.equal(await bar.getAttribute('aria-valuenow'),'4','ruler drag state: '+JSON.stringify({pointer:rulerPointer,...rulerHit}));
  await p.evaluate(()=>{app.zoom=210;app.refresh();document.querySelector('#timelineScroll').scrollLeft=300});
  b=await bar.boundingBox();await p.mouse.move(b.x+b.width/2,b.y+8);await p.mouse.down();await p.mouse.move(b.x+b.width/2-210,b.y+8,{steps:8});await p.mouse.up();await p.waitForTimeout(80);let t=await p.evaluate(()=>app.time);assert(Math.abs(t-3)<.05,`scrolled zoom drag ${t}`);
  await p.screenshot({path:path.join(artifacts,'video-scrub.png')});assert.deepEqual(errors,[]);console.log(JSON.stringify({passed:true,mouseDragDuring: during,scrolledZoomTime:t,errors}));
